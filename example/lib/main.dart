@@ -65,7 +65,7 @@ class _HomePageState extends State<HomePage> {
     }
     print('\n');
 
-    var snapshot2 = await collection.document("0X3TSmf9m2emshH61mgKppuA6Tb2").get(authResults['idToken']);
+    var snapshot2 = await collection.document("0X3TSmf9m2emshH61mgKppuA6Tb2").get();
     if(snapshot2.exists){
       print('key =${snapshot2.key}');
       print(snapshot2.data);
