@@ -8,7 +8,7 @@ class AppConfig{
 
   String get idToken => _idToken;
 
-  setToken(token){
+  setToken(String token){
     _idToken = token;
   }
 }

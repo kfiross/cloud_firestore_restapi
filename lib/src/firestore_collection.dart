@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 
 var _baseUrl = Firestore.instance.config.baseUrl;
 var _webKey = Firestore.instance.config.webKey;
+var _accessToken = Firestore.instance.config.idToken;
 
 class FirestoreCollection {
   final String id;
@@ -99,9 +100,15 @@ class FirestoreCollection {
         };
       }
 
+      Map headers;
+      if(_accessToken!=null){
+        headers = <String, String>{"Authorization": "Bearer $_accessToken"};
+      }
+
       final response = await http.post(
         '$_baseUrl:runQuery?key=$_webKey',
         body: json.encode(sQuery),
+        headers: headers,
       );
 
       if (response.statusCode < 400) {
