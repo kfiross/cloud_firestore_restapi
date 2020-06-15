@@ -10,9 +10,6 @@ import 'src/exceptions.dart';
 import 'src/firestore_collection.dart';
 
 const _authUrl = 'https://identitytoolkit.googleapis.com/v1/accounts';
-
-
-var _baseUrl = Firestore.instance.config.baseUrl;
 var _webKey = Firestore.instance.config.webKey;
 
 
@@ -62,23 +59,6 @@ class Firestore {
 
 
 
-
-
-
-  ///
-  /// Deletes a document identified by collection and id
-  ///
-  /// Throws exception if document does not exist
-  /// Throws exception on I/O error
-
-  Future<void> delete({String collection, dynamic id}) async {
-    try {
-      await http.put(
-          '$_baseUrl/$collection/${id.runtimeType.toString() == 'String' ? id : id.toString()}?key=$_webKey');
-    } catch (error) {
-      throw HttpException('Error deleting $collection. ${error.toString()}');
-    }
-  }
 
   ///
   /// Authentication API

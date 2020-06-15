@@ -28,16 +28,10 @@ class FirestoreCollection {
 
   ///
   /// Returns all documents in a collection as List<FirestoreDocument> .
-  /// #### Parameters
-  /// **collection** name of the collection root. example: 'users', 'users/seniors'
-  /// #### Optional Parameters
-  /// **sort** Specifies more than one sort fields List: [ {'field: 'date', 'direction': 'ASCENDING' },]. If it's just one field you may use **sortField**, **sortOrder** parameters.Direction can be either 'ASCENDING' or 'DESCENDING'.
-  ///
-  /// **query** Specifies multiple filters linked by *AND*.
-  /// **query** is a List of Query objects.
-  ///
-  /// **keyField**, **keyOp**, **keyValue** can be used fopr single condition.
-  ///
+
+  /// [sort] Specifies more than one sort fields List: [ {'field: 'date', 'direction': 'ASCENDING' },]. If it's just one field you may use **sortField**, **sortOrder** parameters.Direction can be either 'ASCENDING' or 'DESCENDING'.
+  /// [query] Specifies multiple filters linked by *AND*.is a List of Query objects.
+  /// [keyField], [keyOp], [keyValue] can be used fpr single condition.
   ///
   Future<List<FirestoreDocument>> getDocuments({
     String sortField,
@@ -154,6 +148,7 @@ class FirestoreCollection {
           item: body,
         )),
       );
+      // there is an error
       if (response.statusCode >= 400) {
         throw HttpException(
             'Error adding ${this.id}. ${response.reasonPhrase}');
@@ -165,38 +160,4 @@ class FirestoreCollection {
     }
   }
 
-  /// Updates firestore document specified by **id**
-  /// **body** contains a map with records contents
-  /// only fields in the body are updated.
-  /// *adds* a new document to the collection if there is no document corresponding to the **id**
-  /// and **addNew** is true - set false
-  /// **collection** must exist
-  ///
-  /// throws exception on error
-  ///
-
-  Future<void> setAll(
-      {dynamic id, Map<String, dynamic> body, bool addNew = false}) async {
-    try {
-      String updateMask = '';
-      body.keys.forEach((k) {
-        updateMask += '&updateMask.fieldPaths=$k';
-      });
-      final response = await http.patch(
-        '$_baseUrl/${this.id}/${id.runtimeType.toString() == 'String' ? id : id.toString()}/?key=$_webKey$updateMask',
-        body: json.encode(Firestore.serialize(
-          item: body,
-        )),
-      );
-
-      if (response.statusCode >= 400) {
-        if (response.statusCode == 404 && addNew) {
-          return await add(body: body, id: id);
-        } else
-          throw HttpException('Error updating ${this.id}. ${response.reasonPhrase}');
-      }
-    } catch (error) {
-      throw HttpException('Error updating ${this.id}. ${error.toString()}');
-    }
-  }
 }
