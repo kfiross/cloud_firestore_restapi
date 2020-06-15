@@ -5,7 +5,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import 'firestore_collection.dart';
+import 'src/app_config.dart';
+import 'src/exceptions.dart';
+import 'src/firestore_collection.dart';
 
 const _authUrl = 'https://identitytoolkit.googleapis.com/v1/accounts';
 
@@ -13,20 +15,6 @@ const _authUrl = 'https://identitytoolkit.googleapis.com/v1/accounts';
 var _baseUrl = Firestore.instance.config.baseUrl;
 var _webKey = Firestore.instance.config.webKey;
 
-/// Defines a query argument
-///
-///
-class Query {
-  final String field;
-  final FieldOp op;
-  final dynamic value;
-  final FilterOp connector; // not implemented
-  Query(
-      {this.field,
-        this.op = FieldOp.EQUAL,
-        this.value,
-        this.connector = FilterOp.NotSpecified});
-}
 
 ///
 /// Specifies action to be taken with the passed email, password
@@ -36,48 +24,11 @@ enum AuthAction {
   signInWithPassword,
 }
 
-///
-/// Op to connect Query fields
-///
-enum FilterOp {
-  NotSpecified,
-  AND,
-  OR, // Not implemented
-}
-
-///
-/// Logincal between a field and its value
-///
-enum FieldOp {
-  OPERATOR_UNSPECIFIED,
-  LESS_THAN,
-  LESS_THAN_OR_EQUAL,
-  GREATER_THAN,
-  GREATER_THAN_OR_EQUAL,
-  EQUAL,
-  ARRAY_CONTAINS,
-  IN,
-  ARRAY_CONTAINS_ANY,
-}
 
 /// ********************************************************
 ///  A Flutter Package to use the **Cloud Firestore REST API
 /// ********************************************************
 
-class AppConfig{
-  final String projectId;
-  final String webKey;
-  final String baseUrl;
-  String _idToken;
-
-  AppConfig(this.projectId, this.webKey, this.baseUrl);
-
-  String get idToken => _idToken;
-
-  setToken(token){
-    _idToken = token;
-  }
-}
 
 AppConfig _config;
 
@@ -86,9 +37,7 @@ class Firestore {
   AppConfig get config => _config;
 
   static Firestore instance = Firestore._();
-
   Firestore._();
-
 
   static initializeApp({@required projectId,@required webKey}){
     _config = AppConfig(
@@ -113,74 +62,8 @@ class Firestore {
 
 
 
-  /// Updates firestore document specified by **id**
-  /// **body** contains a map with records contents
-  /// only fields in the body are updated.
-  /// *adds* a new document to the collection if there is no document corresponding to the **id**
-  /// and **addNew** is true - set false
-  /// **collection** must exist
-  ///
-  /// throws exception on error
-  ///
 
-  Future<void> setAll(
-      {String collection,
-        dynamic id,
-        Map<String, dynamic> body,
-        bool addNew = false}) async {
-    try {
-      String updateMask = '';
-      body.keys.forEach((k) {
-        updateMask += '&updateMask.fieldPaths=$k';
-      });
-      final response = await http.patch(
-        '$_baseUrl/$collection/${id.runtimeType.toString() == 'String' ? id : id.toString()}/?key=$_webKey$updateMask',
-        body: json.encode(serialize(
-          item: body,
-        )),
-      );
 
-      if (response.statusCode >= 400) {
-        if (response.statusCode == 404 && addNew) {
-          return await add(collection: collection, body: body, id: id);
-        } else
-          throw HttpException(
-              'Error updating $collection. ${response.reasonPhrase}');
-      }
-    } catch (error) {
-      throw HttpException('Error updating $collection. ${error.toString()}');
-    }
-  }
-
-  ///
-  /// Adds a record to the specified document/id.
-  /// if id is not specified, creates a new id.
-  /// Creates a new collection if collection does not exist.
-  ///
-  /// Throws exception if record exists
-  /// Throws exception on IO error
-  ///
-  Future<Map<String, dynamic>> add(
-      {String collection, Map<String, dynamic> body, dynamic id}) async {
-    try {
-      final docId = id != null
-          ? '/${id.runtimeType.toString() == 'String' ? id : id.toString()}'
-          : '';
-      final response = await http.post(
-        '$_baseUrl/$collection$docId/?key=$_webKey',
-        body: json.encode(serialize(
-          item: body,
-        )),
-      );
-      if (response.statusCode >= 400) {
-        throw HttpException(
-            'Error adding $collection. ${response.reasonPhrase}');
-      }
-      return mapFirestoreToDart(response.body);
-    } catch (error) {
-      throw HttpException('Error adding $collection. ${error.toString()}');
-    }
-  }
 
   ///
   /// Deletes a document identified by collection and id
@@ -428,18 +311,3 @@ class Firestore {
   }
 } // end class definition
 
-///
-///**HttpExeception(String message)**
-///
-/// Implements Exception class to encapsulate Http errors - both io errors
-/// and http response errors as error text
-///
-
-class HttpException implements Exception {
-  final String message;
-  HttpException(this.message);
-  @override
-  String toString() {
-    return message;
-  }
-}
